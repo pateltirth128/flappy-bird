@@ -1,6 +1,14 @@
+# Python
 __pycache__/
 *.pyc
 venv/
 .venv/
+
+# C++
+build/
+*.exe
+*.o
+
+# Both
 highscore.txt
 .DS_Store
