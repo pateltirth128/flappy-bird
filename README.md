@@ -2,12 +2,18 @@
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
 ![pygame](https://img.shields.io/badge/pygame-2.x-green)
+![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
+![raylib](https://img.shields.io/badge/raylib-5.5-black)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-A twist on the classic Flappy Bird, built with **Python** and **pygame**.
-The bird starts on the **left** and flies **right**, and every **5 points** it **turns around** and flies back the other way through the pipes.
+A twist on the classic Flappy Bird, built twice: once in **Python** with **pygame** and once in **C++** with **raylib**.
+The bird starts on the **left** and flies **right**, and every **5 points** it **turns around** and flies back through the pipes.
 
-No image files needed: everything (bird, pipes, clouds, ground) is drawn with code.
+No image files needed: the bird, pipes, clouds and ground are all drawn with code.
+
+| Python (pygame) | C++ (raylib) |
+|:---:|:---:|
+| ![Python version](screenshots/python.png) | ![C++ version](screenshots/cpp.png) |
 
 ---
 
@@ -18,29 +24,6 @@ No image files needed: everything (bird, pipes, clouds, ground) is drawn with co
 3. At **5, 10, 15, ...** points, the bird **turns around** and you fly back through the pipes you just passed.
 4. Hit a pipe or the ground and it's game over. Beat your **high score**!
 
-## ✨ Features
-
-- Bird starts on the left and flies left to right
-- Changes direction every 5 points, with a **TURN AROUND!** alert
-- Bird flips to face the way it is flying and tilts when rising or falling
-- Endless, randomly generated pipes
-- Live score and a saved high score (`highscore.txt`)
-- Parallax clouds and a scrolling ground
-- Pause, restart, and a start screen with credits
-
-## 🚀 Getting started
-
-**Requirements:** Python 3.8+ and pygame
-
-```bash
-git clone https://github.com/pateltirth128/flappy-bird.git
-cd flappy-bird
-pip install -r requirements.txt
-python flappy_bird.py
-```
-
-> **Windows tip:** if `python` opens the Microsoft Store or says *"Python was not found"*, search Windows for **Manage app execution aliases**, turn off **python.exe** and **python3.exe**, then restart your terminal.
-
 ## ⌨️ Controls
 
 | Key | Action |
@@ -49,24 +32,70 @@ python flappy_bird.py
 | `P` | Pause / resume |
 | `ESC` | Quit |
 
+---
+
+## 🚀 Play it
+
+### Option 1: Windows, no install (C++ version)
+
+Download **`FlappyBird.exe`** from the [Releases](https://github.com/pateltirth128/flappy-bird/releases) page and double-click it.
+If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
+
+### Option 2: Python version
+
+**Requirements:** Python 3.8+ and pygame
+
+```bash
+git clone https://github.com/pateltirth128/flappy-bird.git
+cd flappy-bird/python
+pip install -r requirements.txt
+python flappybird.py
+```
+
+> **Windows tip:** if `python` opens the Microsoft Store or says *"Python was not found"*, search Windows for **Manage app execution aliases**, turn off **python.exe** and **python3.exe**, then restart your terminal.
+
+### Option 3: Build the C++ version
+
+**Windows (easiest):** install [raylib for Windows](https://raysan5.itch.io/raylib) (it puts raylib and a C++ compiler in `C:\raylib`), then double-click **`cpp/build.bat`**. It builds `FlappyBird.exe` and starts the game.
+
+**Any OS with CMake** (Visual Studio, CLion, VS Code, Linux, macOS). CMake downloads raylib for you:
+
+```bash
+cd cpp
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+---
+
 ## 🧠 How it works
 
-The game runs a loop **60 times per second**:
+Both versions use the same game loop:
 
 ```
-events()  →  update()  →  draw()
- input       physics       graphics
+input  →  update()  →  draw()
+keys      physics      graphics
 ```
 
-- **`events()`** reads the keyboard and mouse.
+- **Input** reads the keyboard and mouse.
 - **`update()`** applies gravity, moves the pipes, checks collisions, and counts points.
 - **`draw()`** draws the sky, clouds, pipes, ground, bird, and text.
 
-**Changing direction:** a single variable `d` stores the direction (`1` = right, `-1` = left). Pipes move by `-d * SPEED` every frame, so flipping `d` makes the whole world scroll the other way. When `score % TURN_EVERY == 0`, the game flips `d` and draws the bird mirrored so it faces the new direction.
+**Changing direction:** one variable stores the direction (`1` = right, `-1` = left). Pipes move by `-direction * SPEED` every frame, so flipping it makes the whole world scroll the other way, and the bird is drawn mirrored to face the new direction.
+
+**Turning around safely:** "TURN AROUND!" appears as soon as you hit 5, 10, 15, … points, but the bird waits until it's in the open space between pipes before it flips. If it turned while still inside the pipe it just passed, it would get stuck there and crash.
+
+### What's different in C++
+
+- **Split into classes and files.** `main.cpp` is only 3 lines; `Bird`, `Pipe` and `Game` each live in their own `.h` (what the class has) and `.cpp` (how it works) file.
+- **Fixed timestep.** The game logic runs exactly 60 times a second, separate from drawing, with VSync on, so it plays at the same speed and stays smooth on any monitor.
+- **One standalone `.exe`.** No Python or libraries needed to play.
+
+---
 
 ## 🔧 Customize it
 
-Change these values at the top of `flappy_bird.py`:
+Change these values at the top of `python/flappybird.py` or in `cpp/src/Config.h` (rebuild after changing C++):
 
 | Setting | Default | Effect |
 |---------|---------|--------|
@@ -82,8 +111,19 @@ Change these values at the top of `flappy_bird.py`:
 
 ```
 flappy-bird/
-├── flappy_bird.py      # the game
-├── requirements.txt    # pygame
+├── python/
+│   ├── flappybird.py      # the whole game in one file
+│   └── requirements.txt   # pygame
+├── cpp/
+│   ├── src/
+│   │   ├── main.cpp       # creates the Game and runs it
+│   │   ├── Config.h       # every setting in one place
+│   │   ├── Bird.h/.cpp    # flap, gravity, hitbox, drawing
+│   │   ├── Pipe.h/.cpp    # gap position, collision, drawing
+│   │   └── Game.h/.cpp    # main loop, input, scoring, turning around
+│   ├── CMakeLists.txt     # CMake build (downloads raylib)
+│   └── build.bat          # one-click Windows build
+├── screenshots/
 ├── README.md
 ├── LICENSE
 └── .gitignore
